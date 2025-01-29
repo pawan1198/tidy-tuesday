@@ -1,77 +1,23 @@
-# Load necessary libraries
-setwd("/home/pawan/temp/")
-## library(tidyverse)
-## library(sf)
-## library(tmap)
-## library(plotly)
-## library(dplyr)
-
-## # Load data
-## water_insecurity_2022 <- read_csv("water_insecurity_2022.csv") %>% 
-##   st_as_sf(coords = NULL) 
-
-## water_insecurity_2023 <- read_csv("water_insecurity_2023.csv") %>% 
-##   st_as_sf(coords = NULL) 
-
-## # Combine data
-## combined_data <- bind_rows(
-##   water_insecurity_2022 %>% mutate(year = 2022),
-##   water_insecurity_2023 %>% mutate(year = 2023)
-## )
-
-## # Explore data
-## summary(combined_data)
-## str(combined_data)
-
-## # Visualize data
-## # Create an interactive map using plotly
-## map <- ggplot(combined_data) +
-##   geom_sf(aes(fill = percent_lacking_plumbing, geometry = geometry)) +
-##   scale_fill_gradient(low = "lightblue", high = "darkblue", name = "% Households \nLacking Plumbing") +
-##   facet_wrap(~ year) +
-##   labs(title = "Percent of Households Lacking Complete Plumbing Facilities by County",
-##        subtitle = "Comparison between 2022 and 2023") +
-##   theme_bw()
-
-## interactive_map <- ggplotly(map)
-## interactive_map
-
-## # Save the plot
-## ggsave("water_insecurity_map.png", plot = map, width = 10, height = 6)
-
-## # Share on social media with #TidyTuesday
-## # (Replace with your actual social media post)
-## # twitter_post <- "Exploring water insecurity across the US using #TidyTuesday data. 
-## #                  Visualizing the percent of households lacking plumbing facilities in 2022 and 2023. 
-## #                  #Rstats #DataViz #GIS"
-## # tweet(twitter_post, media = "water_insecurity_map.png") 
-
-## # Submit your own dataset (optional)
-                                        # ...
-
-
-
-
-# Load necessary libraries
+## Load necessary libraries
 library(tidyverse)
 library(ggplot2)
 library(ggpubr)
 
-# Read the data
+## Read the data
 water_insecurity_2022 <- read.csv("water_insecurity_2022.csv")
 water_insecurity_2023 <- read.csv("water_insecurity_2023.csv")
 
-# Combine data for easier analysis
+## Combine data for easier analysis
 water_insecurity_combined <- bind_rows(
   mutate(water_insecurity_2022, year = 2022),
   mutate(water_insecurity_2023, year = 2023)
 )
 
-# Explore the data
+## Explore the data
 summary(water_insecurity_combined)
 str(water_insecurity_combined)
 
-# Calculate the change in percent lacking plumbing between years
+## Calculate the change in percent lacking plumbing between years
 water_insecurity_combined <- water_insecurity_combined %>%
   group_by(name) %>%
   mutate(change_percent = percent_lacking_plumbing - lag(percent_lacking_plumbing))
