@@ -32,7 +32,7 @@ scatter_plot <- ggplot(water_insecurity_combined, aes(x = percent_lacking_plumbi
   geom_point(alpha = 0.5) +
   labs(
     title = "Change in Percent of Households \nLacking Plumbing Facilities",
-    x = "Percent Lacking Plumbing in 2022",
+    x = "Percent Lacking Plumbing",
     y = "Change in Percent Lacking Plumbing (2023 - 2022)"
   )+
     theme_bw(base_size=10)
