@@ -1,3 +1,6 @@
+## Set working directory
+setwd("/home/pawan/myfiles/tidy-tuesday/2025/2025-01-28/")
+
 ## Load necessary libraries
 library(tidyverse)
 library(data.table)
