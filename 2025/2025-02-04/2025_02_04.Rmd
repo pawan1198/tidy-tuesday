@@ -1,0 +1,115 @@
+---
+title: "TidyTuesday: Week 5"
+author: Pawan
+date: 
+output: github_document
+html_preview: false
+---
+
+```{r}
+## Load necessary packages
+setwd("/home/pawan/myfiles/tidy-tuesday/2025/2025-02-04/")
+library(data.table)
+library(ggplot2)
+library(stringr)
+
+## Load the data
+tuesdata <- tidytuesdayR::tt_load('2025-02-04')
+## Option 1: tidytuesdayR package 
+## install.packages("tidytuesdayR")
+simpsons_characters <- tuesdata$simpsons_characters
+simpsons_episodes <- tuesdata$simpsons_episodes
+simpsons_locations <- tuesdata$simpsons_locations
+simpsons_script_lines <- tuesdata$simpsons_script_lines
+
+## Option 2: Read directly from GitHub
+
+characters <- fread("https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-02-04/simpsons_characters.csv")
+episodes <- fread("https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-02-04/simpsons_episodes.csv")
+locations <- fread("https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-02-04/simpsons_locations.csv")
+scripts <- fread("https://raw.githubusercontent.com/rfordatascience/tidytuesday/main/data/2025/2025-02-04/simpsons_script_lines.csv")
+
+
+## Data Cleaning and Preprocessing (Important!)
+
+## 1. Clean script lines:
+names(characters)<-c("id","character_name","character_normalized_name","gender")
+names(locations)<-c("id","location_name","location_normalized_name")
+
+scripts[, normalized_text := tolower(gsub("[^[:alnum:] ]", "", raw_text))] ## Lowercase, remove punctuation
+scripts <- scripts[!is.na(normalized_text) & normalized_text != ""] ## Remove NAs and empty strings
+scripts <- scripts[character_id != 8290] ## Remove "All" character (group speaking)
+
+## 2. Merge data:
+setkey(scripts, character_id)
+setkey(characters, id)
+scripts <- merge(scripts, characters, by.x = "character_id", by.y = "id", all.x = TRUE)
+
+setkey(scripts, episode_id)
+setkey(episodes, id)
+scripts <- merge(scripts, episodes, by.x = "episode_id", by.y = "id", all.x = TRUE)
+
+setkey(scripts, location_id)
+setkey(locations, id)
+scripts <- merge(scripts, locations, by.x = "location_id", by.y = "id", all.x = TRUE)
+
+
+## Analysis
+
+## 1. Character with most spoken lines:
+most_lines <- scripts[, .N, by = character_name][order(-N)][1:10] ## Top 10
+print("Characters with most spoken lines:")
+most_lines
+
+## Dialogue volume change over seasons:
+dialogue_by_season <- scripts[, .N, by = .(character_name, season)][order(season, -N)]
+ggplot(dialogue_by_season, aes(x = season, y = N, fill = character_name)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Dialogue Volume by Character and Season", x = "Season", y = "Number of Lines") +
+  theme_bw()
+
+
+## 2. Most frequent locations:
+most_frequent_locations <- scripts[, .N, by = location_name][order(-N)][1:10]
+print("\nMost frequent locations:")
+most_frequent_locations
+
+## Location vs. IMDb rating (requires careful handling of NAs and potential outliers)
+location_imdb <- scripts[!is.na(imdb_rating), .(avg_imdb = mean(imdb_rating),
+                                                num_episodes = .N), by = location_name]
+location_imdb <- location_imdb[num_episodes > 5] ## Filter locations with enough data points (e.g., > 5 episodes)
+print("\nLocation vs. IMDb Rating (Locations with at least 5 episodes):")
+location_imdb
+
+ggplot(location_imdb, aes(x = location_name, y = avg_imdb)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +  ## Horizontal bar chart for readability
+  labs(title = "Average IMDb Rating by Location", x = "Location", y = "Average IMDb Rating") +
+  theme_bw()
+
+
+## 3. US Viewers vs. IMDb (Handling NAs is crucial)
+viewers_imdb <- episodes[!is.na(imdb_rating) & !is.na(us_viewers_in_millions)]
+cor_imdb_viewers <- cor.test(viewers_imdb$us_viewers_in_millions, viewers_imdb$imdb_rating)
+print("\nCorrelation between US Viewers and IMDb Rating:")
+cor_imdb_viewers
+
+ggplot(viewers_imdb, aes(x = us_viewers_in_millions, y = imdb_rating)) +
+  geom_point() +
+  labs(title = "US Viewers vs. IMDb Rating", x = "US Viewers (Millions)", y = "IMDb Rating") +
+  theme_bw()
+
+
+## 4. Common words/phrases:
+word_counts <- scripts[, .N, by = normalized_text][order(-N)][1:20] ## Top 20 words
+print("\nMost common words/phrases:")
+word_counts
+
+
+## Word frequencies by character (example with Homer):
+homer_words <- scripts[character_name == "Homer Simpson", .N, by = normalized_text][order(-N)][1:10]
+print("\nHomer's most frequent words:")
+homer_words
+
+```
+
